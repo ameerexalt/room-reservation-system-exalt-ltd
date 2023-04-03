@@ -24,10 +24,10 @@ public class BranchService {
 
     public Branch addBranch(Branch branch){
 
-        if (branch.getName()== BranchName.BETHLEHEM || branch.getName()==BranchName.NABLUS || branch.getName()==BranchName.RAMALLAH){
+        if (branch.getName()== BranchName.BETHLEHEM || branch.getName()==BranchName.NABLUS || branch.getName()==BranchName.RAMALLAH || branch.getName()==BranchName.SAFAD){
             return branchRepository.save(branch);
         }
-        String message="You Should Enter RAMALLAH ,BETHLEHEM or NABLUS";
+        String message="You Should Enter RAMALLAH ,BETHLEHEM, NABLUS or SAFAD";
         throw new NoSuchBranchException(message);
     }
 
