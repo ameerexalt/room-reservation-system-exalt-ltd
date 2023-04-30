@@ -26,7 +26,7 @@ public interface RoomRepository extends JpaRepository<Room,Long> {
             "(SELECT rv.room.id FROM Reservation rv WHERE " +
             "(rv.startTime <= :endTime AND rv.endTime >= :startTime))")
     List<Room> findAvailableRoomsByDateAndBranch(@Param("startTime") LocalDateTime startTime,
-                                  @Param("endTime") LocalDateTime endTime,@Param("branchName") BranchName branchName);
+                                  @Param("endTime") LocalDateTime endTime,@Param("branchName") String branchName);
 
 
 

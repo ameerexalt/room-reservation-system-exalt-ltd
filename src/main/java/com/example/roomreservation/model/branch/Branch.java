@@ -21,9 +21,11 @@ public class Branch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Enumerated(EnumType.STRING)
+   // @Enumerated(EnumType.STRING)
     @NotBlank
-    private BranchName name;
+    private String name;
+    @NotBlank
+    private Integer floorNumber;
 
 
 }
