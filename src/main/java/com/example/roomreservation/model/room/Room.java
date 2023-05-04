@@ -2,6 +2,7 @@ package com.example.roomreservation.model.room;
 
 import com.example.roomreservation.model.branch.Branch;
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,4 +30,6 @@ public class Room {
     @Column(name = "is_reserved")
     private Boolean isReserved=false;
 
+    @Column(name = "floor_number")
+    private Integer floorNumber;
 }

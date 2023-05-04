@@ -53,7 +53,8 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authz) -> authz
-                        .requestMatchers("/api/v1/branches/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/branches").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/branches/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
                 );
 
