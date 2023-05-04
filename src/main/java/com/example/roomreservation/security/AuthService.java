@@ -4,25 +4,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
-import com.example.roomreservation.exception.user.UserNotFoundException;
 import com.example.roomreservation.model.token.TokenInfo;
 import com.example.roomreservation.model.user.User;
 import com.example.roomreservation.service.TokenInfoService;
-import com.example.roomreservation.service.UserService;
+import com.example.roomreservation.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.ldap.NamingException;
-import org.springframework.ldap.core.AttributesMapper;
-import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.ldap.authentication.BindAuthenticator;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -44,47 +37,23 @@ import javax.naming.ldap.LdapContext;
 public class AuthService {
     private static Hashtable<String, String> env;
 
-    private final UserService userService;
+    private final UserDetailsServiceImpl userService;
     private final HttpServletRequest httpRequest;
 
     private final TokenInfoService tokenInfoService;
 
     private final AuthenticationManager authenticationManager;
-
     private final JwtTokenUtils jwtTokenUtils;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
-    public AuthService( AuthenticationManager authenticationManager,TokenInfoService tokenInfoService, JwtTokenUtils jwtTokenUtils, HttpServletRequest httpRequest,UserService userService) {
+    public AuthService( AuthenticationManager authenticationManager,TokenInfoService tokenInfoService, JwtTokenUtils jwtTokenUtils, HttpServletRequest httpRequest,UserDetailsServiceImpl userService) {
         this.authenticationManager=authenticationManager;
         this.tokenInfoService = tokenInfoService;
         this.jwtTokenUtils = jwtTokenUtils;
         this.httpRequest = httpRequest;
         this.userService=userService;
     }
-
-//    public JWTResponseDTO login(String username, String password) {
-////        log.info(login+"  "+ password);
-//        log.debug("reached here");
-//        Authentication authentication = authManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(username, password));
-//
-//        log.debug("Valid userDetails credentials.");
-//
-//        com.example.roomreservation.model.user.User userDetails = (User) authentication.getPrincipal();
-//
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//        log.debug("SecurityContextHolder updated. [login={}]", username);
-//
-//
-//        TokenInfo tokenInfo = createLoginToken(username, userDetails.getId());
-//
-//
-//        return JWTResponseDTO.builder()
-//                .accessToken(tokenInfo.getAccessToken())
-//                .refreshToken(tokenInfo.getRefreshToken())
-//                .build();
-//    }
-
 
     private  static ArrayList<String> getUserData(String userName, LdapContext ctx, SearchControls searchControls) {
         ArrayList<String>userData=new ArrayList<>();
@@ -136,25 +105,18 @@ public class AuthService {
         cons.setReturningAttributes(attrIDs);
         return cons;
     }
-    public JWTResponseDTO login(String userName, String password) throws javax.naming.NamingException {
-        LdapContext ldapContext = getLdapContext();
+    public JWTResponseDTO login(String userName, String password) throws Exception {
+        if(userService.loadUserByUsername(userName) != null && passwordEncoder.matches(password, userService.loadUserByUsername(userName).getPassword())) {
+            String email = userService.loadUserByUsername(userName).getEmail();
+            String role = userService.loadUserByUsername(userName).getRole();
+            TokenInfo tokenInfo = createLoginToken(userName, email, new SimpleGrantedAuthority(role), password);
 
-        SearchControls searchControls = getSearchControls();
-        // DistinguishedName is something like 'CN=test test ,CN=users,DC=lab,DC=local'
-        ArrayList <String>userData = getUserData(userName, ldapContext, searchControls);
-        //String mail= getMail(userName,ldapContext,searchControls);
-        //for SECURITY_PRINCIPAL you should provide the DistinguishedName
-        env.put(Context.SECURITY_PRINCIPAL, userData.get(0));
-        env.put(Context.SECURITY_CREDENTIALS,password);
-        // this will search for sMAccountName which is a small name like 'test' for the previous example
-        //String sAMAccountName=getsAMAccountName(userName, ldapContext, searchControls);
-        //DirContext userContext = new InitialDirContext(env);
-        TokenInfo tokenInfo = createLoginToken(userData.get(2), userData.get(1));
-
-        return JWTResponseDTO.builder()
-                .accessToken(tokenInfo.getAccessToken())
-                .refreshToken(tokenInfo.getRefreshToken())
-                .build();
+            return JWTResponseDTO.builder()
+                    .accessToken(tokenInfo.getAccessToken())
+                    .refreshToken(tokenInfo.getRefreshToken())
+                    .build();
+        }
+        throw new BadCredentialsException("Incorrect username or password");
     }
 
 
@@ -162,7 +124,7 @@ public class AuthService {
 
 
 
-    public TokenInfo createLoginToken(String username, String email) {
+    public TokenInfo createLoginToken(String username, String email, SimpleGrantedAuthority role, String password) {
         String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
         InetAddress ip = null;
         try {
@@ -171,23 +133,24 @@ public class AuthService {
             e.printStackTrace();
         }
         String accessTokenId = UUID.randomUUID().toString();
-        String accessToken = JwtTokenUtils.generateToken(username, accessTokenId, false);
+        String accessToken = JwtTokenUtils.generateToken(username, role.getAuthority(),accessTokenId, false);
         log.info("Access token created. [tokenId={}]", accessTokenId);
 
         String refreshTokenId = UUID.randomUUID().toString();
-        String refreshToken = JwtTokenUtils.generateToken(username, refreshTokenId, true);
+        String refreshToken = JwtTokenUtils.generateToken(username,role.getAuthority(), refreshTokenId, true);
         log.info("Refresh token created. [tokenId={}]", accessTokenId);
 
         TokenInfo tokenInfo = new TokenInfo(accessToken, refreshToken);
         if (!userService.isPresentUsername(username)){
-            //if the user hasn't signed in before
-            tokenInfo.setUser(new com.example.roomreservation.model.user.User(username,email));
+//            //if the user hasn't signed in before
+            tokenInfo.setUser(new com.example.roomreservation.model.user.User(username,email,role,password));
         }else
         {
             // if the user has signed in before
-        User user=userService.findByUsername(username);
+        User user=userService.loadUserByUsername(username).getUser().get();
         user.setUsername(username);
         user.setEmail(email);
+        user.setRole(role.getAuthority());
         tokenInfo.setUser(user);
         }
         tokenInfo.setUserAgentText(userAgent);
@@ -203,12 +166,13 @@ public class AuthService {
             return null;
         }
         String userName = jwtTokenUtils.getUserNameFromToken(refreshToken);
+        String role = jwtTokenUtils.getRoleFromToken(refreshToken);
         Optional<TokenInfo> refresh = tokenInfoService.findByRefreshToken(refreshToken);
         if (!refresh.isPresent()) {
             return null;
         }
 
-        return new AccessTokenDto(JwtTokenUtils.generateToken(userName, UUID.randomUUID().toString(), false));
+        return new AccessTokenDto(JwtTokenUtils.generateToken(userName, role,UUID.randomUUID().toString() ,false));
 
     }
 

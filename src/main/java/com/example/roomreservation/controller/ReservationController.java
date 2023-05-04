@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -27,6 +28,7 @@ public class ReservationController {
 
     //getting all reservations
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<Reservation>> getAllReservations(){
         List<Reservation> reservationList= reservationService.getAllReservations();
         return new ResponseEntity<>(reservationList,HttpStatus.OK);
@@ -34,6 +36,7 @@ public class ReservationController {
 
     //get a reservation by the id of the reservation
     @GetMapping({"/{id}"})
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id){
         Reservation reservationList= reservationService.getReservationById(id);
         return new ResponseEntity<>(reservationList,HttpStatus.OK);
@@ -49,6 +52,7 @@ public class ReservationController {
 
     // update one reservation with new data
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Reservation> updateReservation(@PathVariable Long id,@RequestBody @Valid  ReservationDTO reservation){
        Reservation updatedReservation= reservationService.updateReservation(id,reservation);
         return new ResponseEntity<>(updatedReservation, HttpStatus.OK);
@@ -57,6 +61,7 @@ public class ReservationController {
 
     // delete a reservation by its id
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> deleteReservation(@PathVariable Long id){
        Long deletedId =reservationService.deleteReservation(id);
        String message="The reservation with the id "+deletedId+" is deleted";

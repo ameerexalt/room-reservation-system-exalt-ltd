@@ -37,7 +37,7 @@ public class JwtTokenUtils {
         REFRESH_TOKEN_VALIDITY = refreshValidity ;
     }
 
-    public static String generateToken(final String username, final String tokenId , boolean isRefresh) {
+    public static String generateToken(final String username,String role, final String tokenId , boolean isRefresh) {
         return Jwts.builder()
                 .setId(tokenId)
                 .setSubject(username)
@@ -45,6 +45,7 @@ public class JwtTokenUtils {
                 .setIssuer("app-Service")
                 .setExpiration(calcTokenExpirationDate(isRefresh))
                 .claim("created", Calendar.getInstance().getTime())
+                .claim("roles",role)
                 .signWith(SignatureAlgorithm.HS512, TOKEN_SECRET).compact();
     }
 
@@ -56,6 +57,11 @@ public class JwtTokenUtils {
     public String getUserNameFromToken(String token) {
         Claims claims = getClaims(token);
         return claims.getSubject();
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("roles", String.class);
     }
 
     public String getTokenIdFromToken(String token) {

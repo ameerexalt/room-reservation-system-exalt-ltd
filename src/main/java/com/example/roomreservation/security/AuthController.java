@@ -18,10 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
-//    private final LDAPServiceImpl ldapService;
-
-
     @PostMapping("/login")
     public ResponseEntity<JWTResponseDTO>  login (@RequestBody LoginRequestDTO loginRequest) throws Exception {
         JWTResponseDTO jwtResponseDto;

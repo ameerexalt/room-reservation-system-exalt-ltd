@@ -9,6 +9,7 @@ import com.example.roomreservation.service.BranchService;
 import com.example.roomreservation.service.RoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -60,6 +61,7 @@ public class RoomController {
 
     //adding a new room
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Room> addRoom(@RequestBody @Valid  RoomDTO room){
         Room addedRoom = roomService.addRoom(room);
         return new ResponseEntity<>(addedRoom, HttpStatus.CREATED);
@@ -67,6 +69,7 @@ public class RoomController {
 
     //update a specific room with a new data
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Room> updateRoom(@RequestBody @Valid  RoomDTO room,@PathVariable Long id){
         Room updateRoom = roomService.updateRoom(room,id);
         return new ResponseEntity<>(updateRoom, HttpStatus.OK);
@@ -74,6 +77,7 @@ public class RoomController {
 
     //delete one room by its id
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> deleteRoom(@PathVariable Long id){
         String message = roomService.deleteRoom(id);
         return new ResponseEntity<>(message, HttpStatus.OK);
