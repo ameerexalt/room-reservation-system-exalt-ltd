@@ -26,11 +26,11 @@ public class ReservationService {
 
     private final RoomService roomService;
 
-    private final UserService userService;
+    private final UserDetailsServiceImpl userService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReservationService(ReservationRepository reservationRepository, @Lazy RoomService roomService, UserService userService, ModelMapper modelMapper) {
+    public ReservationService(ReservationRepository reservationRepository, @Lazy RoomService roomService, UserDetailsServiceImpl userService, ModelMapper modelMapper) {
         this.reservationRepository = reservationRepository;
         this.roomService = roomService;
         this.userService = userService;
@@ -40,7 +40,7 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationDTO reservation){
         Room reservedRoom=roomService.getRoomById(reservation.getRoom().getId());
-        User user=userService.findByUsername(reservation.getOwner().getUsername());
+        User user=userService.loadUserByUsername(reservation.getOwner().getUsername()).getUser().get();
         LocalDateTime startTime=reservation.getStartTime();
         LocalDateTime endTime=reservation.getEndTime();
         if (startTime.isAfter(endTime)){

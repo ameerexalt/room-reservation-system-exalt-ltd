@@ -1,25 +1,20 @@
 package com.example.roomreservation.model.user;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.util.Collection;
-import java.util.Collections;
 
 @Entity
 @Table
 @Data
 @ToString
 @NoArgsConstructor
-public class User {
+public class  User {
 
     @NotBlank
     @Id
@@ -30,12 +25,20 @@ public class User {
     @Size(max = 50)
     private String email;
 
+    @NotBlank
+    @Size(max = 50)
+    private String role;
 
-    public User(String username,String email) {
+    @NotBlank
+    @Size(max = 50)
+    private String password;
+
+
+    public User(String username, String email, SimpleGrantedAuthority role, String password) {
         this.username = username;
         this.email=email;
+        this.role = role.getAuthority();
+        this.password = password;
     }
-
-
 
 }

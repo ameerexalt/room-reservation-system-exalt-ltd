@@ -1,57 +1,62 @@
 package com.example.roomreservation.security;
 
-import com.example.roomreservation.service.UserService;
+import com.example.roomreservation.repository.UserRepository;
+import com.example.roomreservation.service.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 @EnableWebSecurity
 @Slf4j
-public class SecurityConfig {
-
-
+public class SecurityConfig{
     private String[] PUBLIC_END_POINTS={"/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/logout"};
 
     private String[] AUTH_END_POINTS={"/api/v1/branches","/api/v1/users","/api/v1/reservations","/api/v1/rooms"};
     @Autowired
     private JwtUnAuthResponse jwtUnAuthResponse;
 
-//    @Value("${ad.domain}")
-//    private String AD_DOMAIN;
-//
-//    @Value("${ad.url}")
-//    private String AD_URL;
-
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private  ModelMapper modelMapper;
 
     @Bean
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsServiceImpl(modelMapper);
+    }
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+
+        return authProvider;
+    }
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests((authz) -> authz
+                        .requestMatchers("/api/v1/branches/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
+                );
+
         http.cors(Customizer.withDefaults()).csrf().disable()
                 .authorizeHttpRequests().requestMatchers(PUBLIC_END_POINTS).permitAll()
                 .anyRequest().authenticated()
@@ -59,35 +64,10 @@ public class SecurityConfig {
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                .and().addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class);
 
+
+
         return http.build();
     }
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://192.168.200.150:3000"));
-
-        // <-- you may change "*"
-        configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-
-
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) -> web.ignoring().requestMatchers("/api/auth/**","/v2/api-docs",
-//                "/configuration/ui",
-//                "/swagger-resources",
-//                "/configuration/security",
-//                "/swagger-ui.html",
-//                "/webjars/**");
-//    }
-
 
     @Bean
     public AuthFilter authFilter() {
@@ -106,17 +86,5 @@ public class SecurityConfig {
                 .build();
     }
 
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager() {
-//        return new ProviderManager(Arrays.asList(activeDirectoryLdapAuthenticationProvider()));
-//    }
-//    @Bean
-//    public AuthenticationProvider activeDirectoryLdapAuthenticationProvider() {
-//        ActiveDirectoryLdapAuthenticationProvider provider = new ActiveDirectoryLdapAuthenticationProvider(AD_DOMAIN, AD_URL);
-//        provider.setConvertSubErrorCodesToExceptions(true);
-//        provider.setUseAuthenticationRequestCredentials(true);
-//
-//        return provider;
-//    }
+
 }
