@@ -1,5 +1,7 @@
 package com.example.roomreservation.model.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +33,7 @@ public class  User {
 
     @NotBlank
     @Size(max = 50)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
 
