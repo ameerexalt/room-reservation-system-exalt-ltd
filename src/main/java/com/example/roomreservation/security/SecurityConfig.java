@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig{
-    private String[] PUBLIC_END_POINTS={"/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/logout"};
+    private String[] PUBLIC_END_POINTS={"/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/logout","/api/v1/refreshAccessToken"};
 
     private String[] AUTH_END_POINTS={"/api/v1/branches","/api/v1/users","/api/v1/reservations","/api/v1/rooms"};
     @Autowired
