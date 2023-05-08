@@ -36,19 +36,19 @@ public class UserController {
     // create a new user
 
     @PostMapping("/addUser")
-    public ResponseEntity<User> add (@RequestBody User user) throws Exception{
+    public ResponseEntity<User> add(@RequestBody User user) throws Exception{
         User addedUser = userService.addUser(user);
         return new ResponseEntity<>(addedUser, HttpStatus.CREATED);
     }
 
-    @PostMapping("/{userName}")
-    public ResponseEntity<User> update (@RequestBody @Valid UserDTO user, @PathVariable String userName) throws Exception{
+    @PutMapping("/{userName}")
+    public ResponseEntity<User> update(@RequestBody @Valid UserDTO user, @PathVariable String userName) throws Exception{
         User updatedUser = userService.updateUser(user);
         return new ResponseEntity<>(updatedUser, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{userName}")
-    public ResponseEntity<String> deleteRoom(@PathVariable String userName){
+    public ResponseEntity<String> delete(@PathVariable String userName){
         String message = userService.deleteUser(userName);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }

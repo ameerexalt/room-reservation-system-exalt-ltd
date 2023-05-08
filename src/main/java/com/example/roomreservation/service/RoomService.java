@@ -55,7 +55,7 @@ public class RoomService {
        return availableRooms;
     }
 
-    public List<Room> getAllAvailableRoomsByBranchName(ReservationTime reservationTime, BranchName branchName){
+    public List<Room> getAllAvailableRoomsByBranchName(ReservationTime reservationTime, String branchName){
         LocalDateTime startTime=reservationTime.getStartTime();
         LocalDateTime endTime=reservationTime.getEndTime();
         Branch branch =branchService.getBranchByName(branchName);

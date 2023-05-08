@@ -91,7 +91,9 @@ public class ReservationService {
     public boolean isOwner(Long id){
         Reservation reservation = getReservationById(id);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName().equals(reservation.getOwner().getUsername()) ;
+        String username = reservation.getOwner().getUsername();
+        String ownerName = authentication.getName();
+        return ownerName.equals(username) ;
     }
 
 }
