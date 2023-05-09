@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface BranchRepository extends JpaRepository<Branch,Long> {
 
-    Optional<Branch>findByName(BranchName name);
+    Optional<Branch>findByName(String name);
 }

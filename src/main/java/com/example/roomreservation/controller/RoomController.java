@@ -54,8 +54,7 @@ public class RoomController {
     @GetMapping("/{branchName}/available")
     @NotBlank
     public ResponseEntity<List<Room>>getAllAvailableRooms(@RequestBody @Valid   ReservationTime reservationTime,@PathVariable String branchName){
-        BranchName name=BranchName.valueOf(branchName.toUpperCase());
-        List<Room> availableRooms=roomService.getAllAvailableRoomsByBranchName(reservationTime,name);
+        List<Room> availableRooms=roomService.getAllAvailableRoomsByBranchName(reservationTime,branchName);
         return ResponseEntity.ok(availableRooms);
     }
 

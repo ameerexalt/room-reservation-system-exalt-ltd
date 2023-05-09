@@ -15,8 +15,7 @@ public class RoomDTO {
     private String name;
     @NotBlank
     private Branch branch;
-
     private Integer capacity;
-
-
+    private boolean isReserved;
+    private Integer floorNumber;
 }

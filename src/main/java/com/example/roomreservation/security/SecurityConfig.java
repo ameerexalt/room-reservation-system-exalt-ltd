@@ -7,6 +7,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -26,7 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig{
-    private String[] PUBLIC_END_POINTS={"/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/logout"};
+    private String[] PUBLIC_END_POINTS={"/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/logout","/api/v1/refreshAccessToken"};
 
     private String[] AUTH_END_POINTS={"/api/v1/branches","/api/v1/users","/api/v1/reservations","/api/v1/rooms"};
     @Autowired
@@ -53,8 +55,10 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authz) -> authz
-                        .requestMatchers("/api/v1/branches/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/branches").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/branches/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/users").hasAuthority("ADMIN")
                 );
 
         http.cors(Customizer.withDefaults()).csrf().disable()
@@ -86,5 +90,11 @@ public class SecurityConfig{
                 .build();
     }
 
+    @Bean
+    static MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+//        handler.setTrustResolver(myCustomTrustResolver);
+        return handler;
+    }
 
 }

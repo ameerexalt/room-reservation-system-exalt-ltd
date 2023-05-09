@@ -52,7 +52,7 @@ public class AuthFilter extends OncePerRequestFilter {
                                 userDetails.getUsername(),
                                 userDetails.getPassword());
                         UsernamePasswordAuthenticationToken authenticationResult =
-                                new UsernamePasswordAuthenticationToken(userDetails, token.getCredentials(), userService.loadUserByUsername(username).getAuthorities());
+                                new UsernamePasswordAuthenticationToken(userDetails.getUsername(), token.getCredentials(), userService.loadUserByUsername(username).getAuthorities());
                         authenticationResult.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationResult);
                     }

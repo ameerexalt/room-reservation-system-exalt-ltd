@@ -35,7 +35,7 @@ public class BranchService {
         return branchRepository.findAll();
     }
 
-    public Branch getBranchByName(BranchName name){
+    public Branch getBranchByName(String name){
     return  branchRepository.findByName(name).orElseThrow(()->new BranchNotFoundException(String.format("Branch with the name %s isn't found",name)));
     }
 
